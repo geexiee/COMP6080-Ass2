@@ -1,5 +1,3 @@
-
-/* base styles, feel free to edit */
 html, body {
     margin: 0;
     padding: 0;
@@ -45,4 +43,79 @@ footer {
     list-style-type: none;
 }
 
-/* Add your styles here */
+.loginflex {
+    display: flex;
+    flex-direction: column;
+}
+
+#loginform {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+#dashboard {
+    display: none;
+    flex-direction: 'column';
+    align-items: center;
+}
+
+#registrationform {
+    display: none;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.formfield {
+    display: flex;
+}
+
+.postTile {
+    background-color: aqua;
+    padding: 10px;
+    margin: 10px;
+    border: 1px black;
+}
+
+.commentDiv {
+    background-color: blanchedalmond;
+    padding: 10px;
+    margin: 10px;
+    border: 1px black;
+}
+
+.authorName:hover {
+    cursor: pointer;
+}
+
+.authorName {
+    color: blue;
+    text-decoration: underline;
+}
+
+#profile {
+    display: none;
+}
+
+#profilePageDiv {
+    display: none;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+#createPostPageDiv {
+    display: none;
+}
+
+#addCommentPageDiv {
+    display: none;
+}
+
+#updateDetailsPageDiv {
+    display: none;
+}

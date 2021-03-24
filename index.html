@@ -5,22 +5,101 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Quickpic</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- You can add your styles and scripts here -->
     <link rel="stylesheet" type="text/css" media="screen" href="styles/provided.css" />
     <script type="module" src="src/helpers.js"></script>
     <script type="module" src="src/api.js"></script>
 </head>
 <body>
-    <!-- This is an example app structure, you can modify this as much as you choose --> 
     <header class="banner">
         <h1>Quickpic</h1>
         <ul class="nav">
-            <li class="nav-item">Item</li>
-            <li class="nav-item">Item</li>
+            <button class="nav-item" id="myProfileButton">Item</button>
+            <button class="nav-item" id="homeButton">My Feed</button>
+            <button class="nav-item" id="createPostButton">Create a Post</button>
         </ul>
     </header>
     <main role="main">
-        <!-- app goes here --> 
+            <!--Login Page-->
+            <div class="loginflex" id="loginflex">
+            <form id="loginform">
+                <header><b>Login Page</b></header>
+                <div class="formfield">
+                    Username: <input id="username" value="Sophia"></input>
+                </div>
+                <div class="formfield">
+                    Password: <input id="pw" value="cluttered"></input>
+                </div>
+                <div class="formfield"> 
+                    Confirm Password: <input id="confirmpw" value="cluttered"></input>
+                </div>
+                <div class="formfield">
+                    <button type="button" id="loginbutton">Submit</button> 
+                    <button type="button" id="registerbutton">Register</button>
+                </div>                    
+            </form>
+
+            <!--Registration Page-->
+            <form id="registrationform">
+                <header><b>Registration Form</b></header>
+                <div class="formfield">
+                    Full name: <input id="name"></input>
+                </div>
+                <div class="formfield">
+                    Email: <input id="email"></input>
+                </div>
+                <div class="formfield">
+                    Username: <input id="registeruser"></input>
+                </div>
+                <div class="formfield">
+                Password: <input id="registerpw"></input>
+                </div>  
+                <div class="formfield">
+                Confirm Password: <input id="confirmregisterpw"></input>
+                </div>
+                <div class="formfield">
+                    <button type="button" id="confirmregistration">Submit</button> 
+                    <button type="button" id="homebutton">Home</button>
+                </div> 
+            </form>
+        </div>
+
+        <!--Dashboard (upon login)-->
+        <div id="dashboard">
+            Welcome to the dashboard baby
+            <div id="posts">
+            </div>
+        </div>
+
+        <!--Profile Page-->
+        <div id="profile">
+            <div id="profilePageDiv">
+            </div>
+        </div>
+
+        <!--Create a Post Page-->
+        <div id="createPostPageDiv">
+            Create a Post here! <br>
+            <textarea rows=9 cols=38 id="postInputArea"></textarea>
+            <br>
+            Image: <input id="imgSrc">
+            <button id="submitPostButton">Submit</button>
+        </div>
+
+        <!--Add a Comment Page-->
+        <div id="addCommentPageDiv">
+            Add a Comment here! <br>
+            <textarea rows=9 cols=38 id="commentInputArea"></textarea>
+            <br>
+            <button id="submitCommentButton">Submit</button>
+        </div>
+
+        <div id="updateDetailsPageDiv">
+            Update your details here! <br>
+            Email: <input id="updatedEmail"><br>
+            Name: <input id="updatedName"><br>
+            Password: <input id="updatedPassword"><br>
+            <button id="submitUpdatedDetailsButton">Submit</button>
+        </div>
     </main>
     <footer>
         <p>&copy; Quickpic</p>

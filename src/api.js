@@ -8,11 +8,7 @@ const getJSON = (path, options) =>
         .then(res => res.json())
         .catch(err => console.warn(`API_ERROR: ${err.message}`));
 
-/**
- * This is a sample class API which you may base your code on.
- * You may use this as a launch pad but do not have to.
- */
-export default class API {
+export default class DummyAPI {
     /** @param {String} url */
     constructor(url) {
         this.url = url;
@@ -21,5 +17,53 @@ export default class API {
     /** @param {String} path */
     makeAPIRequest(path) {
         return getJSON(`${this.url}/${path}`);
+    }
+}
+
+export class PostAPI {
+    /** @param {String} url */
+    constructor(url) {
+        this.url = url;
+    } 
+
+    /** @param {String} path */
+    makeAPIRequest(path) {
+        return getJSON(`${this.url}/${path}`);
+    }
+}
+
+export class AuthAPI {
+    /** @param {String} url */
+    constructor(url) {
+        this.url = url;
+    } 
+
+    /** @param {String} path */
+    makeAPIRequest(path) {
+        return getJSON(`${this.url}/${path}`);
+    }
+}
+
+export class UserAPI {
+    /** @param {String} url */
+    constructor(url) {
+        this.url = url;
+    } 
+
+    /** @param {String} path */
+    makeAPIRequest(path) {
+        return getJSON(`${this.url}/${path}`);
+    }
+
+    /** @param {String} path */
+    requestcontent(path) {
+        return fetch(`${this.url}/${path}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'Authorization': token})
+        });
     }
 }

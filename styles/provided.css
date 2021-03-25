@@ -39,7 +39,7 @@ footer {
     border: 1px solid rgba(0, 0, 0, 0.1);
     margin: auto;
     padding: 5px;
-    display: inline;
+    display: none;
     list-style-type: none;
 }
 
@@ -117,5 +117,13 @@ footer {
 }
 
 #updateDetailsPageDiv {
+    display: none;
+}
+
+#updatePostPageDiv {
+    display: none;
+}
+
+#modal {
     display: none;
 }

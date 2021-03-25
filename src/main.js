@@ -15,25 +15,22 @@ const userapi = new UserAPI('http://localhost:5000');
 //     .then(r => console.log(r));
 
 /* TODO LIST
-1. view other profiles
+1. view other profiles - fragment based url?bri
 2. follow other users
 3. error window with close button
 4. feed pagination/infinite scroll
-5. unlike
-6. upate post
-7. delete post
+5. unlike | NOT NECESSARY
+6. upate post | DONE
+7. delete post | DONE
 8. challenge components*/
 
-function checkPasswordMatch(pw1, pw2) {
-    if (pw1 != pw2) {
-        return false;
-    }
-    return true
-}
+/*QUESTIONS
+1. do i have to actuallty have all the profiles preloaded
+2. do i need to create the error window separately, is there an inbuilt solution :)
+3. how to infinite scroll - scroll event listener (check if scrolled to bottom), or intersection observer (browser api, when empty div at the bottom reload stuff)
+4. how to update instantly
+*/
 
-function errorPopup(message) {
-    window.confirm(message);
-}
 
 
 // event listener for logging in
@@ -60,6 +57,10 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                 errorPopup('Incorrect login details!');
             } else if (data.status === 200) {
                 data.json().then((result) => {
+                    var navButtons = document.getElementsByClassName("nav-item");
+                    for (let i = 0; i < navButtons.length; i++) {
+                        navButtons[i].style.display = "inline";
+                    }
                     document.getElementById('loginform').style.display = 'none';
                     let dashboard = document.getElementById('dashboard');
                     dashboard.style.display = 'flex';
@@ -82,39 +83,40 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                 // Setup create a post button/page
                                 let createPostbutton = document.getElementById('createPostButton');
                                 createPostbutton.addEventListener("click", () => {
-                                    document.getElementById("loginflex").style.display = "none";
-                                    document.getElementById("dashboard").style.display = "none";
-                                    document.getElementById("profile").style.display = "none";
-                                    document.getElementById("createPostPageDiv").style.display = "inline";
-                                    document.getElementById('updateDetailsPageDiv').style.display = 'none';
-                                    document.getElementById('addCommentPageDiv').style.display = 'none';
+                                    showCreatePostPage();
                                 });
                                 let submitPostButton = document.getElementById("submitPostButton");
                                 submitPostButton.addEventListener("click", () => {
                                     let postDescription = document.getElementById("postInputArea").value;
-                                    let imgSrc = document.getElementById("imgSrc").value;
-                                    const postBody = {
-                                        "description_text": postDescription,
-                                        "src": imgSrc
-                                    };
-                                    fetch(`http://localhost:5000/post`, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Authorization': `Token ${result.token}`,
-                                            'Accept': 'application/json',
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify(postBody),
-                                    }).then(createPostResponse => {
-                                        if (createPostResponse.status == 200) {
-                                            createPostResponse.json().then(postResponse => {
-                                                console.log(postResponse.post_id);
-                                            })
-                                        } else {
-                                            alert("failed to call create post API");
-                                        }
-                                    });
-                                    
+                                    // read the file
+                                    let imgFile = document.getElementById("imgSrc").files[0];
+                                    fileToDataUrl(imgFile).then(url => {
+                                        let splitUrl = url.split(',')[1];
+                                        const postBody = {
+                                            "description_text": postDescription,
+                                            "src": splitUrl
+                                        };
+                                        fetch(`http://localhost:5000/post`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Authorization': `Token ${result.token}`,
+                                                'Accept': 'application/json',
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify(postBody),
+                                        }).then(createPostResponse => {
+                                            if (createPostResponse.status == 200) {
+                                                createPostResponse.json().then(postResponse => {
+                                                    alert("successfully created post!")
+                                                })
+                                            } else {
+                                                alert("failed to call create post API");
+                                            }
+                                        });
+                                    })
+                                    .catch(err => {
+                                        alert(err);
+                                    });    
                                 });
 
                                 // Setup current user profile page
@@ -127,6 +129,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                 updateDetailsButton.addEventListener("click", () => {
                                     showUpdateDetailsPage();
                                 })
+
                                 // Add event listener for updating details
                                 document.getElementById("submitUpdatedDetailsButton").addEventListener("click", () => {
                                     let newEmail = document.getElementById("updatedEmail").value;
@@ -260,7 +263,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                         const commentInputBody = {
                                                             "comment": document.getElementById("commentInputArea").value
                                                         };
-                                                        fetch(`http://localhost:5000/user/post/comment?id=${individualpostjson.id}`, {
+                                                        fetch(`http://localhost:5000/post/comment?id=${individualpostjson.id}`, {
                                                             method: 'PUT',
                                                             headers: {
                                                                 'Authorization': `Token ${result.token}`,
@@ -278,6 +281,67 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                     });
                                                 });
                                                 postTile.appendChild(commentButton);
+
+                                                // Adding update post button
+                                                var updatePostButton = document.createElement("button");
+                                                updatePostButton.innerText = "Update";
+                                                updatePostButton.addEventListener("click", () => {
+                                                    showUpdatePostPage();
+                                                    // Add API call and event listener for updating post
+                                                    document.getElementById("updatePostButton").addEventListener("click", () => {
+                                                        let updatedPostDescription = document.getElementById("updatePostInputArea").value;
+                                                        // read the file
+                                                        let imgFile = document.getElementById("updateImgSrc").files[0];
+                                                        fileToDataUrl(imgFile).then(url => {
+                                                            let splitUrl = url.split(',')[1];
+                                                            const updatedPostBody = {
+                                                                "description_text": updatedPostDescription,
+                                                                "src": splitUrl
+                                                            };
+                                                            fetch(`http://localhost:5000/post/?id=${individualpostjson.id}`, {
+                                                                method: 'PUT',
+                                                                headers: {
+                                                                    'Authorization': `Token ${result.token}`,
+                                                                    'Accept': 'application/json',
+                                                                    'Content-Type': 'application/json'
+                                                                },
+                                                                body: JSON.stringify(updatedPostBody),
+                                                            }).then(updatePostResponse => {
+                                                                if (updatePostResponse.status == 200) {
+                                                                    alert("successfully udpated post!");
+                                                                } else {
+                                                                    alert("failed to call update post API");
+                                                                }
+                                                            });
+                                                        })
+                                                        .catch(err => {
+                                                            alert(err);
+                                                        });  
+                                                    });
+                                                });
+                                                postTile.appendChild(updatePostButton)                                                
+                                                
+                                                // Adding delete post button
+                                                var deletePostButton = document.createElement("button");
+                                                deletePostButton.innerText = "Delete";
+                                                deletePostButton.addEventListener("click", () => {
+                                                    // Add API call and event listener for deleting post
+                                                    fetch(`http://localhost:5000/post/?id=${individualpostjson.id}`, {
+                                                        method: 'DELETE',
+                                                        headers: {
+                                                            'Authorization': `Token ${result.token}`,
+                                                            'Accept': 'application/json',
+                                                            'Content-Type': 'application/json'
+                                                        },
+                                                    }).then(deletePostReponse => {
+                                                        if (deletePostReponse.status == 200) {
+                                                            alert("successfully deleted post!");
+                                                        } else {
+                                                            alert("Couldnt delete post");
+                                                        }
+                                                    });
+                                                });
+                                                postTile.appendChild(deletePostButton)
 
                                                 // adding number of comments to the tile
                                                 let numcomments = document.createElement('div');
@@ -305,7 +369,6 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                 
                                 // Setup button to view current user profile
                                 let myProfileButton = document.getElementById('myProfileButton');
-                                myProfileButton.innerText = "My Profile";
                                 myProfileButton.addEventListener("click", () => {
                                     document.getElementById('dashboard').style.display = "none";
                                     document.getElementById('profilePageDiv').style.display = "flex";
@@ -315,7 +378,8 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                     document.getElementById('createPostPageDiv').style.display = 'none';
                                     document.getElementById('updateDetailsPageDiv').style.display = 'none';
                                     document.getElementById('addCommentPageDiv').style.display = 'none';
-                                });
+                                    document.getElementById('updatePostPageDiv').style.display = 'none';
+});
 
                                 // Setup current users feed
                                 fetch('http://localhost:5000/user/feed', {
@@ -385,6 +449,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                             let numlikes = document.createElement('div');
                                                             let nlikes = individualpostjson.meta.likes.length;
                                                             numlikes.innerText = `Likes: ${nlikes}\n Liked by: `;
+                                                            postTile.appendChild(numlikes);
                                                             // getting names of people who likes the post
                                                             for (let userID of individualpostjson.meta.likes) {
                                                                 fetch(`http://localhost:5000/user?id=${userID}`, {
@@ -397,12 +462,14 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                                 }).then(fetchUsernameResponse => {
                                                                     if (fetchUsernameResponse.status == 200) {
                                                                         fetchUsernameResponse.json().then(userDetails => {
-                                                                            numlikes.innerText += ` ${userDetails.username}`;
+                                                                            let likeUser = document.createElement('text');
+                                                                            likeUser.className = 'authorName';
+                                                                            likeUser.innerText = ` ${userDetails.username}`;
+                                                                            numlikes.appendChild(likeUser);
                                                                         })
                                                                     }
                                                                 });
                                                             }
-                                                            postTile.appendChild(numlikes);
             
                                                             // Adding like button
                                                             var button = document.createElement("button");
@@ -457,7 +524,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                             // adding number of comments to the tile
                                                             let numcomments = document.createElement('div');
                                                             let ncomments = individualpostjson.comments.length;
-                                                            numcomments.innerText = `Comments: ${ncomments}`; //TODO: display individual comments
+                                                            numcomments.innerText = `Comments: ${ncomments}`; 
                                                             postTile.appendChild(numcomments);
                                                             // Adding each comment 
                                                             for (let commentdata of individualpostjson.comments) {
@@ -467,7 +534,9 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                                 let unixtimestamp = commentdata.published;
                                                                 let publishedDate = new Date(unixtimestamp * 1000);
                                                                 publishedDate = publishedDate.toLocaleString();
-                                                                comment.innerText = `${commentdata.comment} \n Commented by: ${commentdata.author} at ${publishedDate}`;
+                                                                let commentName = createNameLink(commentdata.author);
+                                                                comment.innerText = `${commentdata.comment} \n Commented at ${publishedDate} by: `;
+                                                                comment.appendChild(commentName);
                                                                 postTile.appendChild(comment);
                                                             }
                                                             postsDiv.appendChild(postTile);
@@ -491,70 +560,13 @@ document.getElementById('loginbutton').addEventListener("click", () => {
     }
 });
 
-// event listener for registration
-document.getElementById('confirmregistration').addEventListener("click", () => {
-    let pw1 = document.getElementById('registerpw').value;
-    let pw2 = document.getElementById('confirmregisterpw').value;
-
-    if (!checkPasswordMatch(pw1,pw2)) {
-        alert("Passwords don't match, please try again.");
-    } else {
-        const registrationBody = {
-            "username": document.getElementById('registeruser').value,
-            "password": pw1,
-            "email": document.getElementById('email').value,
-            "name": document.getElementById('name').value
-        };
-        const result = fetch('http://localhost:5000/auth/signup', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(registrationBody),
-        }).then((data) => {
-            console.log(data);
-            if (data.status === 400) {
-                alert('Missing username/password');
-            } else if (data.status === 200) {
-                alert('You have successfully registered! Please feel free to go back to the home page and login with your new account.');
-                data.json().then(result => {
-                    console.log(result);
-                })
-            }
-        })
-    }
-})
-
-// event listener for going to registration page
-document.getElementById('registerbutton').addEventListener("click", () => {
-    document.getElementById('loginform').style.display = 'none';
-    document.getElementById('loginform').reset();
-    document.getElementById('registrationform').style.display = 'flex';    
-    document.getElementById('registrationform').style.flexDirection = 'column';    
-    document.getElementById('createPostPageDiv').style.display = 'none';
-    document.getElementById('addCommentPageDiv').style.display = 'none';
-})
-
-// event listener for going to back to home page from registration page
-document.getElementById('homebutton').addEventListener("click", () => {
-    document.getElementById('registrationform').reset();
-    document.getElementById('registrationform').style.display = 'none';
-    document.getElementById('loginform').style.display = 'flex';   
-    document.getElementById('createPostPageDiv').style.display = 'none'; 
-    document.getElementById('addCommentPageDiv').style.display = 'none';
-})
-
-// event listener for using home page button
-document.getElementById('homeButton').addEventListener("click", () => {
-    let dashboard = document.getElementById('dashboard');
-    dashboard.style.display = 'flex';
-    dashboard.style.flexDirection = 'column'; 
-    document.getElementById('profilePageDiv').style.display = "none";
-    document.getElementById('profile').style.display = "none";
-    document.getElementById('createPostPageDiv').style.display = 'none';
-    document.getElementById('addCommentPageDiv').style.display = 'none';
-})
+// Function for creating name link (returns text element)
+function createNameLink(name) {
+    let nameLink = document.createElement('text');
+    nameLink.className = "authorName";
+    nameLink.innerText = name;
+    return nameLink;
+}
 
 // Function for getting user info from a token, user, and ID
 function getOtherUserInfo(token, username, id) {
@@ -604,6 +616,87 @@ function isValueInObject(value, object) {
     return false;
 }
 
+// event listener for registration
+document.getElementById('confirmregistration').addEventListener("click", () => {
+    let pw1 = document.getElementById('registerpw').value;
+    let pw2 = document.getElementById('confirmregisterpw').value;
+
+    if (!checkPasswordMatch(pw1,pw2)) {
+        alert("Passwords don't match, please try again.");
+    } else {
+        const registrationBody = {
+            "username": document.getElementById('registeruser').value,
+            "password": pw1,
+            "email": document.getElementById('email').value,
+            "name": document.getElementById('name').value
+        };
+        const result = fetch('http://localhost:5000/auth/signup', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(registrationBody),
+        }).then((data) => {
+            console.log(data);
+            if (data.status === 400) {
+                alert('Missing username/password');
+            } else if (data.status === 200) {
+                alert('You have successfully registered! Please feel free to go back to the home page and login with your new account.');
+                data.json().then(result => {
+                    console.log(result);
+                })
+            }
+        })
+    }
+})
+
+// Function for checking passwords 
+function checkPasswordMatch(pw1, pw2) {
+    if (pw1 != pw2) {
+        return false;
+    }
+    return true
+}
+
+// Function for displaying errors
+function errorPopup(message) {
+    window.confirm(message);
+}
+
+// event listener for going to registration page
+document.getElementById('registerbutton').addEventListener("click", () => {
+    document.getElementById('loginform').style.display = 'none';
+    document.getElementById('loginform').reset();
+    document.getElementById('registrationform').style.display = 'flex';    
+    document.getElementById('registrationform').style.flexDirection = 'column';    
+    document.getElementById('createPostPageDiv').style.display = 'none';
+    document.getElementById('addCommentPageDiv').style.display = 'none';
+    document.getElementById('updatePostPageDiv').style.display = 'none';
+})
+
+// event listener for going to back to home page from registration page
+document.getElementById('homebutton').addEventListener("click", () => {
+    document.getElementById('registrationform').reset();
+    document.getElementById('registrationform').style.display = 'none';
+    document.getElementById('loginform').style.display = 'flex';   
+    document.getElementById('createPostPageDiv').style.display = 'none'; 
+    document.getElementById('addCommentPageDiv').style.display = 'none';
+    document.getElementById('updatePostPageDiv').style.display = 'none';
+})
+
+// event listener for using home page button
+document.getElementById('homeButton').addEventListener("click", () => {
+    let dashboard = document.getElementById('dashboard');
+    dashboard.style.display = 'flex';
+    dashboard.style.flexDirection = 'column'; 
+    document.getElementById('profilePageDiv').style.display = "none";
+    document.getElementById('profile').style.display = "none";
+    document.getElementById('createPostPageDiv').style.display = 'none';
+    document.getElementById('addCommentPageDiv').style.display = 'none';
+    document.getElementById('updatePostPageDiv').style.display = 'none';
+})
+
 // Function for showing the comment page
 function showCommentPage() {
     document.getElementById('dashboard').style.display = "none";
@@ -612,6 +705,7 @@ function showCommentPage() {
     document.getElementById('createPostPageDiv').style.display = 'none';
     document.getElementById('addCommentPageDiv').style.display = 'inline';
     document.getElementById('updateDetailsPageDiv').style.display = 'none';
+    document.getElementById('updatePostPageDiv').style.display = 'none';
 }
 
 // Function for showing the update details page
@@ -622,4 +716,27 @@ function showUpdateDetailsPage() {
     document.getElementById('createPostPageDiv').style.display = 'none';
     document.getElementById('addCommentPageDiv').style.display = 'none';
     document.getElementById('updateDetailsPageDiv').style.display = 'inline';
+    document.getElementById('updatePostPageDiv').style.display = 'none';
+}
+
+// Function for showing create a post page
+function showCreatePostPage() {
+    document.getElementById("loginflex").style.display = "none";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("profile").style.display = "none";
+    document.getElementById("createPostPageDiv").style.display = "inline";
+    document.getElementById('updateDetailsPageDiv').style.display = 'none';
+    document.getElementById('addCommentPageDiv').style.display = 'none';
+    document.getElementById('updatePostPageDiv').style.display = 'none';
+}
+
+// Function for showing update post page
+function showUpdatePostPage() {
+    document.getElementById("loginflex").style.display = "none";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("profile").style.display = "none";
+    document.getElementById("createPostPageDiv").style.display = "none";
+    document.getElementById('updateDetailsPageDiv').style.display = 'none';
+    document.getElementById('addCommentPageDiv').style.display = 'none';
+    document.getElementById('updatePostPageDiv').style.display = 'inline';
 }

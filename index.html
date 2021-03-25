@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Quickpic</title>
@@ -13,7 +14,7 @@
     <header class="banner">
         <h1>Quickpic</h1>
         <ul class="nav">
-            <button class="nav-item" id="myProfileButton">Item</button>
+            <button class="nav-item" id="myProfileButton">My Profile</button>
             <button class="nav-item" id="homeButton">My Feed</button>
             <button class="nav-item" id="createPostButton">Create a Post</button>
         </ul>
@@ -81,7 +82,8 @@
             Create a Post here! <br>
             <textarea rows=9 cols=38 id="postInputArea"></textarea>
             <br>
-            Image: <input id="imgSrc">
+            Image: <input id="imgSrc" type="file" accept="image/*">
+            <br>
             <button id="submitPostButton">Submit</button>
         </div>
 
@@ -93,13 +95,42 @@
             <button id="submitCommentButton">Submit</button>
         </div>
 
+        <!--Update Details Page-->
         <div id="updateDetailsPageDiv">
             Update your details here! <br>
             Email: <input id="updatedEmail"><br>
             Name: <input id="updatedName"><br>
             Password: <input id="updatedPassword"><br>
             <button id="submitUpdatedDetailsButton">Submit</button>
+        </div> 
+        
+        <!--Update Post Page-->
+        <div id="updatePostPageDiv">
+            Update a Post here! <br>
+            New Description <br>
+            <textarea rows=9 cols=38 id="updatePostInputArea"></textarea>
+            <br>
+            Image: <input id="updateImgSrc" type="file" accept="image/*">
+            <br>
+            <button id="updatePostButton">Update</button>
         </div>
+
+        <div class="modal fade" tabindex="-1" role="dialog" id="modal">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                  <h4 class="modal-title">Error</h4>
+                </div>
+                <div class="modal-body">
+                  <p>error!&hellip;</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+              </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+          </div><!-- /.modal -->
     </main>
     <footer>
         <p>&copy; Quickpic</p>

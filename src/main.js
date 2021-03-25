@@ -31,7 +31,9 @@ const userapi = new UserAPI('http://localhost:5000');
 4. how to update instantly
 */
 
-
+window.location.hash = "login";
+// Event listener for hash change
+window.addEventListener("hashchange", alert('changed hash'));
 
 // event listener for logging in
 document.getElementById('loginbutton').addEventListener("click", () => {
@@ -57,6 +59,8 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                 errorPopup('Incorrect login details!');
             } else if (data.status === 200) {
                 data.json().then((result) => {
+                    // let hash = location.hash;
+                    // hash='meme';
                     var navButtons = document.getElementsByClassName("nav-item");
                     for (let i = 0; i < navButtons.length; i++) {
                         navButtons[i].style.display = "inline";
@@ -364,8 +368,6 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                         }
                                     })
                                 }
-                                // Setup update details page
-
                                 
                                 // Setup button to view current user profile
                                 let myProfileButton = document.getElementById('myProfileButton');
@@ -379,7 +381,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                     document.getElementById('updateDetailsPageDiv').style.display = 'none';
                                     document.getElementById('addCommentPageDiv').style.display = 'none';
                                     document.getElementById('updatePostPageDiv').style.display = 'none';
-});
+                                });
 
                                 // Setup current users feed
                                 fetch('http://localhost:5000/user/feed', {
@@ -392,7 +394,6 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                 }).then((rawposts) => {
                                     if (rawposts.status == 200) {
                                         rawposts.json().then((posts) => {
-                                            console.log(posts);
                                             for (let post of posts.posts) {
                                                 fetch(`http://localhost:5000/post?id=${post.id}`, {
                                                     method: 'GET',
@@ -545,7 +546,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                                 })
                                             }
                                         });
-                                    } else if (rawposts.status == 403) {
+                                    } else {
                                         alert('bad request!');
                                     }
                                 });
@@ -721,6 +722,7 @@ function showUpdateDetailsPage() {
 
 // Function for showing create a post page
 function showCreatePostPage() {
+    window.location.hash = "createPost";
     document.getElementById("loginflex").style.display = "none";
     document.getElementById("dashboard").style.display = "none";
     document.getElementById("profile").style.display = "none";

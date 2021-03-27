@@ -95,6 +95,7 @@ window.addEventListener('scroll', () => {
     } 
 });
 
+
 // event listener for logging in
 document.getElementById('loginbutton').addEventListener("click", () => {
     let pw1 = document.getElementById('pw').value;

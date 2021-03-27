@@ -29,3 +29,76 @@ export function fileToDataUrl(file) {
     reader.readAsDataURL(file);
     return dataUrlPromise;
 }
+
+// Function for creating name link (returns text element)
+export function createNameLink(name) {
+    let nameLink = document.createElement('text');
+    nameLink.className = "authorName";
+    nameLink.innerText = name;
+    return nameLink;
+}
+
+// Function for following other users
+export function followUser(username) {
+    fetch(`http://localhost:5000/user/follow/?username=${username}`, {
+        method: 'PUT',
+        headers: {
+        'Authorization': `Token ${localStorage.getItem('token')}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+        },
+    }).then(response => {
+        if (response.status == 200) {
+            response.json().then(() => {
+                alert('successfully followed user!');
+            });
+        } else {
+            errorPopup("API call to follow the user failed");
+        }
+    });
+}
+
+// Function for unfollowing other users
+export function unfollowUser(username) {
+    fetch(`http://localhost:5000/user/unfollow/?username=${username}`, {
+        method: 'PUT',
+        headers: {
+        'Authorization': `Token ${localStorage.getItem('token')}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+        },
+    }).then(response => {
+        if (response.status == 200) {
+            response.json().then(() => {
+                alert('successfully unfollowed user!');
+            });
+        } else {
+            errorPopup("API call to unfollow the user failed");
+        }
+    });
+}
+
+export function idToUsername(id) {
+    fetch(`http://localhost:5000/user/?id=${id}`, {
+        method: 'GET',
+        headers: {
+        'Authorization': `Token ${localStorage.getItem('token')}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+        },
+    }).then(response => {
+        if (response.status == 200) {
+            response.json().then(responseBody => {
+                localStorage.setItem('followingUsername', responseBody.username);
+            })
+        } else {
+            errorPopup("API call to find the username from a given ID failed");
+        }
+    });
+}
+
+// Function for displaying errors
+export function errorPopup(message) {
+    document.getElementById("modalBody").innerText = message;
+    $("#myModal").modal();
+}

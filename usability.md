@@ -1,1 +1,2 @@
-TODO!
+I tried to keep the front end usability as intuitive as possible with clear labels, buttons, and messages for both success/errors. 
+Added an alt message to post images to provide a possible explanation/solution for when image aren't loading.

@@ -18,7 +18,7 @@ export function fileToDataUrl(file) {
     const valid = validFileTypes.find(type => type === file.type);
     // Bad data, let's walk away.
     if (!valid) {
-        throw Error('provided file is not a png, jpg or jpeg image.');
+        throw Error('Provided file is not a png, jpg or jpeg image.');
     }
     
     const reader = new FileReader();
@@ -35,70 +35,69 @@ export function createNameLink(name) {
     let nameLink = document.createElement('text');
     nameLink.className = "authorName";
     nameLink.innerText = name;
+    nameLink.addEventListener("click", () => {
+        window.location.hash = name;
+    });
     return nameLink;
 }
 
 // Function for following other users
 export function followUser(username) {
-    fetch(`http://localhost:5000/user/follow/?username=${username}`, {
-        method: 'PUT',
-        headers: {
-        'Authorization': `Token ${localStorage.getItem('token')}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-        },
-    }).then(response => {
-        if (response.status == 200) {
-            response.json().then(() => {
-                alert('successfully followed user!');
-            });
-        } else {
-            errorPopup("API call to follow the user failed");
-        }
-    });
+    try {
+        fetch(`http://localhost:5000/user/follow/?username=${username}`, {
+            method: 'PUT',
+            headers: {
+            'Authorization': `Token ${localStorage.getItem('token')}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+            },
+        }).then(response => {
+            if (response.status == 200) {
+                response.json().then(() => {
+                    successPopup('Successfully followed user!');
+                });
+            } else {
+                errorPopup("API call to follow the user failed");
+            }
+        });
+    } catch {
+        errorPopup("Failed to call follow API");
+    }
 }
 
 // Function for unfollowing other users
 export function unfollowUser(username) {
-    fetch(`http://localhost:5000/user/unfollow/?username=${username}`, {
-        method: 'PUT',
-        headers: {
-        'Authorization': `Token ${localStorage.getItem('token')}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-        },
-    }).then(response => {
-        if (response.status == 200) {
-            response.json().then(() => {
-                alert('successfully unfollowed user!');
-            });
-        } else {
-            errorPopup("API call to unfollow the user failed");
-        }
-    });
-}
-
-export function idToUsername(id) {
-    fetch(`http://localhost:5000/user/?id=${id}`, {
-        method: 'GET',
-        headers: {
-        'Authorization': `Token ${localStorage.getItem('token')}`,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-        },
-    }).then(response => {
-        if (response.status == 200) {
-            response.json().then(responseBody => {
-                localStorage.setItem('followingUsername', responseBody.username);
-            })
-        } else {
-            errorPopup("API call to find the username from a given ID failed");
-        }
-    });
+    try {
+        fetch(`http://localhost:5000/user/unfollow/?username=${username}`, {
+            method: 'PUT',
+            headers: {
+            'Authorization': `Token ${localStorage.getItem('token')}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+            },
+        }).then(response => {
+            if (response.status == 200) {
+                response.json().then(() => {
+                    successPopup('Successfully unfollowed user!');
+                });
+            } else {
+                errorPopup("API call to unfollow the user failed");
+            }
+        });
+    } catch {
+        errorPopup("Failed to call unfollow API");
+    }
 }
 
 // Function for displaying errors
 export function errorPopup(message) {
     document.getElementById("modalBody").innerText = message;
+    document.getElementById("exampleModalLabel").innerText = "Error";
+    $("#myModal").modal();
+}
+// Function for displaying success messages
+export function successPopup(message) {
+    document.getElementById("modalBody").innerText = message;
+    document.getElementById("exampleModalLabel").innerText = "Success!";
     $("#myModal").modal();
 }

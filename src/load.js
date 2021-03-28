@@ -1,8 +1,8 @@
 import { createNameLink } from './helpers.js';
 import { followUser } from './helpers.js';
-import { idToUsername } from './helpers.js';
 import { errorPopup } from './helpers.js';
 import { unfollowUser } from './helpers.js';
+import { successPopup } from './helpers.js';
 
 
 /* 
@@ -25,18 +25,34 @@ export function loadUserProfile(username) {
             responseBody.json().then((currentUserDetails) => {
                 // Setup current user profile page
                 let profilePageDiv = document.getElementById('profilePageDiv');
-                let followingList = [];
-                for (let id of currentUserDetails.following) {
-                    idToUsername(id);
-                    console.log(id, localStorage.getItem('followingUsername'));
-
-                    followingList.push(localStorage.getItem('followingUsername'));
-                }
                 profilePageDiv.innerText = `Username: ${currentUserDetails.username} 
                                             Email: ${currentUserDetails.email}
                                             Name:  ${currentUserDetails.name}
-                                            Number of Followers: ${currentUserDetails.followed_num}
-                                            Currently Following: ${followingList}`;
+                                            Number of Followers: ${currentUserDetails.followed_num}`;
+                let followingText = document.createElement("text");
+                followingText.innerText = "Currently Following:";
+                profilePageDiv.appendChild(followingText);
+
+                for (let id of currentUserDetails.following) {
+                    fetch(`http://localhost:5000/user?id=${id}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Token ${localStorage.getItem('token')}`,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                    }).then(fetchUsernameResponse => {
+                        if (fetchUsernameResponse.status == 200) {
+                            fetchUsernameResponse.json().then(userDetails => {
+                                let followingUser = createNameLink(` ${userDetails.username}`);
+                                followingUser.addEventListener("click", () => {
+                                    window.location.hash = `${userDetails.username}`;
+                                })
+                                followingText.appendChild(followingUser);
+                            })
+                        }
+                    });  
+                }
 
                 // Only add update option if profile is of current user
                 if (localStorage.getItem('currentUsername') == username) {
@@ -52,29 +68,30 @@ export function loadUserProfile(username) {
                         let newPassword = document.getElementById("updatedPassword").value;
                         if (newPassword == '' || newName == '' || newEmail == '') {
                             errorPopup("Please do not enter any empty fields");
-                        } 
-                        const updatedDetailsBody = {
-                            "email": newEmail,
-                            "name": newName,
-                            "password": newPassword
-                        }
-                        
-                        fetch(`http://localhost:5000/user`, {
-                            method: 'PUT',
-                            headers: {
-                                'Authorization': `Token ${localStorage.getItem('token')}`,
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(updatedDetailsBody),
-                        }).then(updateResponse => {
-                            if (updateResponse.status == 200) {
-                                alert("successfully updated details!");
-                            } else {
-                                errorPopup("Couldnt update detailsy");
+                        } else {
+                            const updatedDetailsBody = {
+                                "email": newEmail,
+                                "name": newName,
+                                "password": newPassword
                             }
-                        });
-                    })
+                            
+                            fetch(`http://localhost:5000/user`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Token ${localStorage.getItem('token')}`,
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(updatedDetailsBody),
+                            }).then(updateResponse => {
+                                if (updateResponse.status == 200) {
+                                    successPopup("Successfully updated details!");
+                                } else {
+                                    errorPopup("Couldn't update details");
+                                }
+                            });
+                        }
+                    });
                     profilePageDiv.appendChild(updateDetailsButton);
                 }
 
@@ -83,11 +100,6 @@ export function loadUserProfile(username) {
                     let followButton = document.createElement("button");
                     followButton.innerText = "Follow";
                     followButton.addEventListener("click", () => {
-                        /*
-                        get list of followers
-                        check if profile user is in that list
-                        unfollow if they are
-                        */
                         fetch(`http://localhost:5000/user?id=${localStorage.getItem('currID')}`, {
                             method: 'GET',
                             headers: {
@@ -99,7 +111,6 @@ export function loadUserProfile(username) {
                             if (updateResponse.status == 200) {
                                 updateResponse.json().then(response => {
                                     if (response.following.includes(currentUserDetails.id)) {
-                                        // errorPopup("You already follow this user!");
                                         unfollowUser(username);
                                     } else {
                                         followUser(username);
@@ -132,9 +143,6 @@ export function loadUserProfile(username) {
                                 let postTile = document.createElement('div');
                                 postTile.className = "postTile";
 
-                                // adding ID to the tile
-                                postTile.innerText = `Post ID: ${individualpostjson.id}\n`;
-                                
                                 // adding author to the tile
                                 let authorTitle = document.createElement('text');
                                 let authorName = document.createElement('text');
@@ -158,6 +166,7 @@ export function loadUserProfile(username) {
                                 // adding image to the tile
                                 let image = document.createElement('img');
                                 image.setAttribute('src', `data:image/jpeg;base64, ${individualpostjson.src}`);
+                                image.alt = "Sorry, we could not display this image at this time. Please check your network connection.";
                                 postTile.appendChild(image);
 
                                 // adding post description to the tile
@@ -168,8 +177,9 @@ export function loadUserProfile(username) {
                                 // adding number of likes to the tile
                                 let numlikes = document.createElement('div');
                                 let nlikes = individualpostjson.meta.likes.length;
+                                numlikes.innerText = `Likes: ${nlikes}\n Liked by: `;
+                                postTile.appendChild(numlikes);
                                 // getting names of people who likes the post
-                                let uselikes = new Array();
                                 for (let userID of individualpostjson.meta.likes) {
                                     fetch(`http://localhost:5000/user?id=${userID}`, {
                                         method: 'GET',
@@ -181,13 +191,12 @@ export function loadUserProfile(username) {
                                     }).then(fetchUsernameResponse => {
                                         if (fetchUsernameResponse.status == 200) {
                                             fetchUsernameResponse.json().then(userDetails => {
-                                                uselikes.push(userDetails.username);
+                                                let likeUser = createNameLink(` ${userDetails.username}`);
+                                                numlikes.appendChild(likeUser);
                                             })
                                         }
                                     });
                                 }
-                                numlikes.innerText = `Likes: ${nlikes}\n Liked by: ${individualpostjson.meta.likes}`;
-                                postTile.appendChild(numlikes);
 
                                 // Adding like button
                                 var likeButton = document.createElement("button");
@@ -201,6 +210,7 @@ export function loadUserProfile(username) {
                                         'Content-Type': 'application/json'
                                         },
                                     });
+                                    successPopup("Successfully liked!");
                                 });
                                 postTile.appendChild(likeButton);
 
@@ -211,24 +221,31 @@ export function loadUserProfile(username) {
                                     window.location.hash = "#comment";
                                     // Add API call and event listener for submitting comment
                                     document.getElementById("submitCommentButton").addEventListener("click", () => {
-                                        const commentInputBody = {
-                                            "comment": document.getElementById("commentInputArea").value
-                                        };
-                                        fetch(`http://localhost:5000/post/comment?id=${individualpostjson.id}`, {
-                                            method: 'PUT',
-                                            headers: {
-                                                'Authorization': `Token ${localStorage.getItem('token')}`,
-                                                'Accept': 'application/json',
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify(commentInputBody),
-                                        }).then(commentInputReponse => {
-                                            if (commentInputReponse.status == 200) {
-                                                alert("successfully posted comment!");
-                                            } else {
-                                                errorPopup("Couldnt post comment");
-                                            }
-                                        });
+                                        let comment = document.getElementById("commentInputArea").value;
+                                        if (comment == '') {
+                                            errorPopup("Please input a comment");
+                                        } else {
+                                            console.log(`${individualpostjson.id}`);
+                                            const commentInputBody = {
+                                                "comment": comment
+                                            };
+                                            fetch(`http://localhost:5000/post/comment?id=${individualpostjson.id}`, {
+                                                method: 'PUT',
+                                                headers: {
+                                                    'Authorization': `Token ${localStorage.getItem('token')}`,
+                                                    'Accept': 'application/json',
+                                                    'Content-Type': 'application/json'
+                                                },
+                                                body: JSON.stringify(commentInputBody),
+                                            }).then(commentInputReponse => {
+                                                if (commentInputReponse.status == 200) {
+                                                    document.getElementById("commentInputArea").value = '';
+                                                    successPopup("Successfully posted comment!");
+                                                } else {
+                                                    errorPopup("Please input a valid (non empty) comment");
+                                                }
+                                            });
+                                        }
                                     });
                                 });
                                 postTile.appendChild(commentButton);
@@ -245,31 +262,35 @@ export function loadUserProfile(username) {
                                             let updatedPostDescription = document.getElementById("updatePostInputArea").value;
                                             // read the file
                                             let imgFile = document.getElementById("updateImgSrc").files[0];
-                                            fileToDataUrl(imgFile).then(url => {
-                                                let splitUrl = url.split(',')[1];
-                                                const updatedPostBody = {
-                                                    "description_text": updatedPostDescription,
-                                                    "src": splitUrl
-                                                };
-                                                fetch(`http://localhost:5000/post/?id=${individualpostjson.id}`, {
-                                                    method: 'PUT',
-                                                    headers: {
-                                                        'Authorization': `Token ${localStorage.getItem('token')}`,
-                                                        'Accept': 'application/json',
-                                                        'Content-Type': 'application/json'
-                                                    },
-                                                    body: JSON.stringify(updatedPostBody),
-                                                }).then(updatePostResponse => {
-                                                    if (updatePostResponse.status == 200) {
-                                                        alert("successfully updated post!");
-                                                    } else {
-                                                        errorPopup("Failed to call update post API");
-                                                    }
-                                                });
-                                            })
-                                            .catch(err => {
-                                                errorPopup(err);
-                                            });  
+                                            try {
+                                                fileToDataUrl(imgFile).then(url => {
+                                                    let splitUrl = url.split(',')[1];
+                                                    const updatedPostBody = {
+                                                        "description_text": updatedPostDescription,
+                                                        "src": splitUrl
+                                                    };
+                                                    fetch(`http://localhost:5000/post/?id=${individualpostjson.id}`, {
+                                                        method: 'PUT',
+                                                        headers: {
+                                                            'Authorization': `Token ${localStorage.getItem('token')}`,
+                                                            'Accept': 'application/json',
+                                                            'Content-Type': 'application/json'
+                                                        },
+                                                        body: JSON.stringify(updatedPostBody),
+                                                    }).then(updatePostResponse => {
+                                                        if (updatePostResponse.status == 200) {
+                                                            successPopup("successfully updated post!");
+                                                        } else {
+                                                            errorPopup("Failed to call update post API. Please ensure all fields are filled out.");
+                                                        }
+                                                    });
+                                                })
+                                                .catch(err => {
+                                                    errorPopup(err);
+                                                }); 
+                                            } catch {
+                                                errorPopup("Please enter a valid description and/or image");
+                                            } 
                                         });
                                     });
                                     postTile.appendChild(updatePostButton)                                                
@@ -288,7 +309,7 @@ export function loadUserProfile(username) {
                                             },
                                         }).then(deletePostReponse => {
                                             if (deletePostReponse.status == 200) {
-                                                alert("successfully deleted post!");
+                                                successPopup("successfully deleted post!");
                                             } else {
                                                 errorPopup("Couldnt delete post");
                                             }
@@ -297,7 +318,6 @@ export function loadUserProfile(username) {
                                     postTile.appendChild(deletePostButton)
                                 }
 
-                                // adding number of comments to the tile
                                 let numcomments = document.createElement('div');
                                 let ncomments = individualpostjson.comments.length;
                                 numcomments.innerText = `Comments: ${ncomments}`; 
@@ -310,7 +330,9 @@ export function loadUserProfile(username) {
                                     let unixtimestamp = commentdata.published;
                                     let publishedDate = new Date(unixtimestamp * 1000);
                                     publishedDate = publishedDate.toLocaleString();
-                                    comment.innerText = `${commentdata.comment} \n Commented by: ${commentdata.author} at ${publishedDate}`;
+                                    let commentName = createNameLink(commentdata.author);
+                                    comment.innerText = `${commentdata.comment} \n Commented at ${publishedDate} by: `;
+                                    comment.appendChild(commentName);
                                     postTile.appendChild(comment);
                                 }
                                 postsDiv.appendChild(postTile);
@@ -320,12 +342,12 @@ export function loadUserProfile(username) {
                 }
             })
         } else {
-            errorPopup('failed to fetch current user details');
+            errorPopup('Failed to fetch current user details');
         }
     });
 }
 
-// Function for loading feed
+// Function for loading feed for the infinite scroll
 export function loadUserFeed(postList) {
     for (let post of postList) {
         fetch(`http://localhost:5000/post?id=${post.id}`, {
@@ -337,7 +359,7 @@ export function loadUserFeed(postList) {
             },
         }).then((individualpostresponse) => {
             if (individualpostresponse.status != 200) {
-                errorPopup('failed to call API');
+                errorPopup('Failed to call post loading API');
             } else {
                 individualpostresponse.json().then((individualpostjson) => {
                     let postsDiv = document.getElementById("posts");
@@ -346,9 +368,6 @@ export function loadUserFeed(postList) {
                     let postTile = document.createElement('div');
                     postTile.className = "postTile";
 
-                    // adding ID to the tile
-                    postTile.innerText = `Post ID: ${individualpostjson.id}\n`;
-                    
                     // adding author to the tile
                     let authorTitle = document.createElement('text');
                     let authorName = document.createElement('text');
@@ -372,6 +391,7 @@ export function loadUserFeed(postList) {
                     // adding image to the tile
                     let image = document.createElement('img');
                     image.setAttribute('src', `data:image/jpeg;base64, ${individualpostjson.src}`);
+                    image.alt = "Sorry, we could not display this image at this time. Please check your network connection.";
                     postTile.appendChild(image);
 
                     // adding post description to the tile
@@ -420,6 +440,7 @@ export function loadUserFeed(postList) {
                             'Content-Type': 'application/json'
                             },
                         });
+                        successPopup("Successfully liked!");
                     });
                     postTile.appendChild(button);
 
@@ -427,13 +448,14 @@ export function loadUserFeed(postList) {
                     var commentButton = document.createElement("button");
                     commentButton.innerText = "Comment";
                     commentButton.addEventListener("click", () => {
-                        showCommentPage();
+                        window.location.hash = "#comment";
                         // Add API call and event listener for submitting comment
                         document.getElementById("submitCommentButton").addEventListener("click", () => {
                             let comment = document.getElementById("commentInputArea").value;
                             if (comment == '') {
-                                alert("please input a comment");
+                                errorPopup("Please input a comment");
                             } else {
+                                console.log(`${individualpostjson.id}`);
                                 const commentInputBody = {
                                     "comment": comment
                                 };
@@ -448,9 +470,9 @@ export function loadUserFeed(postList) {
                                 }).then(commentInputReponse => {
                                     if (commentInputReponse.status == 200) {
                                         document.getElementById("commentInputArea").value = '';
-                                        alert("successfully posted comment!");
+                                        successPopup("Successfully posted comment!");
                                     } else {
-                                        errorPopup("Couldnt post comment");
+                                        errorPopup("Please input a valid (non empty) comment");
                                     }
                                 });
                             }
@@ -505,7 +527,7 @@ export function loadDashboard() {
                         },
                     }).then((individualpostresponse) => {
                         if (individualpostresponse.status != 200) {
-                            errorPopup('failed to call API');
+                            errorPopup('Failed to call post loading API');
                         } else {
                             individualpostresponse.json().then((individualpostjson) => {
                                 let postsDiv = document.getElementById("posts");
@@ -514,9 +536,6 @@ export function loadDashboard() {
                                 let postTile = document.createElement('div');
                                 postTile.className = "postTile";
 
-                                // adding ID to the tile
-                                postTile.innerText = `Post ID: ${individualpostjson.id}\n`;
-                                
                                 // adding author to the tile
                                 let authorTitle = document.createElement('text');
                                 let authorName = document.createElement('text');
@@ -540,6 +559,7 @@ export function loadDashboard() {
                                 // adding image to the tile
                                 let image = document.createElement('img');
                                 image.setAttribute('src', `data:image/jpeg;base64, ${individualpostjson.src}`);
+                                image.alt = "Sorry, we could not display this image at this time. Please check your network connection.";
                                 postTile.appendChild(image);
 
                                 // adding post description to the tile
@@ -588,6 +608,7 @@ export function loadDashboard() {
                                         'Content-Type': 'application/json'
                                         },
                                     });
+                                    successPopup("Successfully liked!");
                                 });
                                 postTile.appendChild(button);
 
@@ -595,12 +616,12 @@ export function loadDashboard() {
                                 var commentButton = document.createElement("button");
                                 commentButton.innerText = "Comment";
                                 commentButton.addEventListener("click", () => {
-                                    showCommentPage();
+                                    window.location.hash = "#comment";
                                     // Add API call and event listener for submitting comment
                                     document.getElementById("submitCommentButton").addEventListener("click", () => {
                                         let comment = document.getElementById("commentInputArea").value;
                                         if (comment == '') {
-                                            alert("please input a comment");
+                                            errorPopup("Please input a comment");
                                         } else {
                                             const commentInputBody = {
                                                 "comment": comment
@@ -616,9 +637,9 @@ export function loadDashboard() {
                                             }).then(commentInputReponse => {
                                                 if (commentInputReponse.status == 200) {
                                                     document.getElementById("commentInputArea").value = '';
-                                                    alert("successfully posted comment!");
+                                                    successPopup("successfully posted comment!");
                                                 } else {
-                                                    errorPopup("Couldnt post comment");
+                                                    errorPopup("Please input a valid (non empty) comment");
                                                 }
                                             });
                                         }

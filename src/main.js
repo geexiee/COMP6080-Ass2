@@ -1,5 +1,6 @@
 import { fileToDataUrl } from './helpers.js';
 import { errorPopup } from './helpers.js';
+import { successPopup } from './helpers.js';
 import { showCommentPage } from './display.js';
 import { showUpdateDetailsPage } from './display.js';
 import { showCreatePostPage } from './display.js';
@@ -156,35 +157,42 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                 let submitPostButton = document.getElementById("submitPostButton");
                                 submitPostButton.addEventListener("click", () => {
                                     let postDescription = document.getElementById("postInputArea").value;
+                                    if (postDescription == '') {
+                                        errorPopup("Please enter a description");
+                                    }
                                     // read the file
                                     let imgFile = document.getElementById("imgSrc").files[0];
-                                    fileToDataUrl(imgFile).then(url => {
-                                        let splitUrl = url.split(',')[1];
-                                        const postBody = {
-                                            "description_text": postDescription,
-                                            "src": splitUrl
-                                        };
-                                        fetch(`http://localhost:5000/post`, {
-                                            method: 'POST',
-                                            headers: {
-                                                'Authorization': `Token ${localStorage.getItem('token')}`,
-                                                'Accept': 'application/json',
-                                                'Content-Type': 'application/json'
-                                            },
-                                            body: JSON.stringify(postBody),
-                                        }).then(createPostResponse => {
-                                            if (createPostResponse.status == 200) {
-                                                createPostResponse.json().then(postResponse => {
-                                                    alert("successfully created post!")
-                                                })
-                                            } else {
-                                                errorPopup("failed to call create post API");
-                                            }
-                                        });
-                                    })
-                                    .catch(err => {
-                                        errorPopup(err);
-                                    });    
+                                    try {
+                                        fileToDataUrl(imgFile).then(url => {
+                                            let splitUrl = url.split(',')[1];
+                                            const postBody = {
+                                                "description_text": postDescription,
+                                                "src": splitUrl
+                                            };
+                                            fetch(`http://localhost:5000/post`, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Authorization': `Token ${localStorage.getItem('token')}`,
+                                                    'Accept': 'application/json',
+                                                    'Content-Type': 'application/json'
+                                                },
+                                                body: JSON.stringify(postBody),
+                                            }).then(createPostResponse => {
+                                                if (createPostResponse.status == 200) {
+                                                    createPostResponse.json().then(() => {
+                                                        successPopup("successfully created post!")
+                                                    })
+                                                } else {
+                                                    errorPopup("failed to call create post API");
+                                                }
+                                            });
+                                        })
+                                        .catch(err => {
+                                            errorPopup(err);
+                                        });    
+                                    } catch {
+                                        errorPopup("Please enter a valid description or file");
+                                    }
                                 });
 
                                 // Setup button to view current user profile
@@ -194,7 +202,7 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                 });
                             })
                         } else {
-                            errorPopup('failed to fetch current user details');
+                            errorPopup('Failed to fetch current user details from API');
                         }
                     });
                 })
@@ -217,7 +225,7 @@ document.getElementById('confirmregistration').addEventListener("click", () => {
             "email": document.getElementById('email').value,
             "name": document.getElementById('name').value
         };
-        const result = fetch('http://localhost:5000/auth/signup', {
+        fetch('http://localhost:5000/auth/signup', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -225,11 +233,10 @@ document.getElementById('confirmregistration').addEventListener("click", () => {
             },
             body: JSON.stringify(registrationBody),
         }).then((data) => {
-            console.log(data);
             if (data.status === 400) {
-                errorPopup('Missing username/password');
+                errorPopup('Please fill out all fields');
             } else if (data.status === 200) {
-                alert('You have successfully registered! Please feel free to go back to the home page and login with your new account.');
+                successPopup('You have successfully registered! Please feel free to go back to the home page and login with your new account.');
             }
         })
     }

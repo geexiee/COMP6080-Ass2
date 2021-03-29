@@ -13,24 +13,6 @@ import { loadDashboard } from './load.js';
 import { loadUserFeed } from './load.js';
 import { loadUserProfile } from './load.js';
 
-
-// This url may need to change depending on what port your backend is running
-// on.
-
-// Example usage of makeAPIRequest method.
-// dummyapi.makeAPIRequest('dummy/user')
-//     .then(r => console.log(r));
-
-/* TODO LIST
-1. view other profiles - fragment based url?bri | DONE
-2. follow other users | DONE
-3. error window with close button | DONE
-4. feed pagination/infinite scroll | DONE
-5. unlike | NOT NECESSARY
-6. upate post | DONE
-7. delete post | DONE
-8. challenge components*/
-
 window.onhashchange = loadHashPage;
 function loadHashPage() {
     let hash = location.hash;
@@ -180,10 +162,10 @@ document.getElementById('loginbutton').addEventListener("click", () => {
                                             }).then(createPostResponse => {
                                                 if (createPostResponse.status == 200) {
                                                     createPostResponse.json().then(() => {
-                                                        successPopup("successfully created post!")
+                                                        successPopup("Successfully created post!")
                                                     })
                                                 } else {
-                                                    errorPopup("failed to call create post API");
+                                                    errorPopup("Please enter a valid description or file. Accepted image formats are JPEG, PNG, and JPG");
                                                 }
                                             });
                                         })
@@ -225,20 +207,26 @@ document.getElementById('confirmregistration').addEventListener("click", () => {
             "email": document.getElementById('email').value,
             "name": document.getElementById('name').value
         };
-        fetch('http://localhost:5000/auth/signup', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(registrationBody),
-        }).then((data) => {
-            if (data.status === 400) {
-                errorPopup('Please fill out all fields');
-            } else if (data.status === 200) {
-                successPopup('You have successfully registered! Please feel free to go back to the home page and login with your new account.');
-            }
-        })
+        try {
+            fetch('http://localhost:5000/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(registrationBody),
+            }).then((data) => {
+                if (data.status === 200) {
+                    successPopup('You have successfully registered! Please feel free to go back to the home page and login with your new account.');
+                } else if (data.status == 409) {
+                    errorPopup('This username is already in use, please choose another one.');
+                } else {
+                    errorPopup('Please fill out all fields');
+                }
+            });
+        } catch {
+            errorPopup('Please fill out all fields');
+        }
     }
 })
 

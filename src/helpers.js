@@ -30,7 +30,7 @@ export function fileToDataUrl(file) {
     return dataUrlPromise;
 }
 
-// Function for creating name link (returns text element)
+// Function for creating username link (returns text element)
 export function createNameLink(name) {
     let nameLink = document.createElement('text');
     nameLink.className = "authorName";
@@ -95,9 +95,22 @@ export function errorPopup(message) {
     document.getElementById("exampleModalLabel").innerText = "Error";
     $("#myModal").modal();
 }
+
 // Function for displaying success messages
 export function successPopup(message) {
     document.getElementById("modalBody").innerText = message;
     document.getElementById("exampleModalLabel").innerText = "Success!";
     $("#myModal").modal();
+}
+
+//Comparer Function    
+export function GetSortOrder(prop) {    
+    return function(a, b) {    
+        if (a.meta.prop > b.meta.prop) {    
+            return 1;    
+        } else if (a.meta.prop < b.meta.prop) {    
+            return -1;    
+        }    
+        return 0;    
+    }    
 }

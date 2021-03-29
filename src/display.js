@@ -45,6 +45,7 @@ export function showUpdatePostPage() {
     document.getElementById('updateDetailsPageDiv').style.display = 'none';
     document.getElementById('addCommentPageDiv').style.display = 'none';
     document.getElementById('updatePostPageDiv').style.display = 'inline';
+    document.getElementById('updateImgSrc').style.display = 'none';
 }
 
 // Function for showing registration page
